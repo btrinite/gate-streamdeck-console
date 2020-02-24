@@ -19,7 +19,7 @@ import paho.mqtt.client as mqtt
 
 
 # Folder location of image assets used by this example.
-ASSETS_PATH = os.path.join(os.path.dirname(__file__), "python-elgato-streamdeck/src/Assets")
+ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
 
 # Generates a custom tile with run-time generated text and custom image via the
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         client.on_connect = on_connect
         client.on_message = on_message
 
-        client.connect("localhost", 1883, 60)
+        #client.connect("localhost", 1883, 60)
 
         # Set initial screen brightness to 30%.
         deck.set_brightness(30)
