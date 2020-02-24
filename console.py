@@ -11,16 +11,79 @@
 # tiles generated at runtime, and responding to button state change events.
 
 import os
+import time
+from time import sleep
+
 import threading
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 import paho.mqtt.client as mqtt
 
+import datetime
+def formatStopWatch(deltaus):
+    millis = int(deltaus.microseconds/1000)
+    seconds=int(deltaus.seconds%60)
+    minutes=int (deltaus.seconds/60)%60
+    return '{0:02d}:{1:02d}.{2:03d}'.format(minutes, seconds, millis)
+    
+class myTimer(object):
+    """A simple timer class"""
+    
+    def __init__(self):
+        self.started= False
+        self.splited = False
+        print("Stopwatch initialized")
+        pass
+    
+    def start(self):
+        """Starts the timer"""
+        self._start = datetime.datetime.now()
+        self.started= True
+        self.splited = False
+        return self._start
+    
+    def stop(self):
+        """Stops the timer.  Returns the time elapsed"""
+        self._stop = datetime.datetime.now()
+        self.started= False
+        return (self._stop - self._start)
+    
+    def now(self):
+        """Returns the current time with a message"""
+        return datetime.datetime.now()
+    
+    def elapsed(self):
+        """Time elapsed since start was called"""
+        return (datetime.datetime.now() - self._start)
+    
+    def split(self):
+        """Start a split timer"""
+        now = datetime.datetime.now()
+        if (self.splited):
+            self._latLap = now - self._split_start
+        else:
+            self._latLap = now - self._start
+        self._split_start = now
+        self.splited = True
+        return self._split_start
+    
+    def lastLap(self):
+        return (self._latLap)
+
+
+stopWatch = myTimer()
+run = False
 
 # Folder location of image assets used by this example.
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
 
+
+def getSWKey (deck):
+    return deck.key_count() - 4
+
+def getTLKey (deck):
+    return deck.key_count() - 5
 
 # Generates a custom tile with run-time generated text and custom image via the
 # PIL module.
@@ -71,11 +134,16 @@ def get_key_style(deck, key, state):
         icon = "{}.png".format("Blank")
         font = "Roboto-Regular.ttf"
         label = "00:00.000" if state else "00:00.000"
+    elif (key == exit_key_index-4):
+        name = "laptime"
+        icon = "{}.png".format("Blank")
+        font = "Roboto-Regular.ttf"
+        label = "00:00.000" if state else "00:00.000"
     else:
         name = "gate"
         icon = "{}.png".format("Plugged" if state else "Unplugged")
         font = "Roboto-Regular.ttf"
-        label = "Pressed!" if state else "Gate {}".format(key)
+        label = "Pressed!" if state else "Gate {}".format(key+1)
 
     return {
         "name": name,
@@ -97,10 +165,21 @@ def update_key_image(deck, key, state):
     # Update requested key with the generated image.
     deck.set_key_image(key, image)
 
+def update_key_stopwatch_image(deck, key, state, msg):
+    # Determine what icon and label to use on the generated key.
+    key_style = get_key_style(deck, key, state)
+
+    # Generate the custom key with the requested image and label.
+    image = render_key_image(deck, key_style["icon"], key_style["font"], msg)
+
+    # Update requested key with the generated image.
+    deck.set_key_image(key, image)
 
 # Prints key state change information, updates rhe key image and performs any
 # associated actions when a key is pressed.
 def key_change_callback(deck, key, state):
+    global run
+    key_style = get_key_style(deck, key, state)
     # Print new key state
     print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
 
@@ -109,15 +188,26 @@ def key_change_callback(deck, key, state):
 
     # Check if the key is changing to the pressed state.
     if state:
-        key_style = get_key_style(deck, key, state)
+        if key_style["name"] == "start":
+            if stopWatch.started:
+                stopWatch.split()
+            else:
+                stopWatch.start()
+                msg = '------'
+                update_key_stopwatch_image(deck, getTLKey(deck), False, msg)
 
+        elif key_style["name"] == "stop":
+            if stopWatch.started:
+                msg = formatStopWatch(stopWatch.stop())
+                update_key_stopwatch_image(deck, getSWKey(deck), state, msg)
         # When an exit button is pressed, close the application.
-        if key_style["name"] == "exit":
+        elif key_style["name"] == "exit":
             # Reset deck, clearing all button images.
             deck.reset()
-
             # Close deck handle, terminating internal worker threads.
             deck.close()
+            run=False
+    return
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -159,13 +249,14 @@ if __name__ == "__main__":
         # Register callback function for when a key state changes.
         deck.set_key_callback(key_change_callback)
 
-        client.loop_forever()
+        run = True
+        while run:
+            client.loop()
+            if (stopWatch.started==True):
+                msg = formatStopWatch(stopWatch.elapsed())
+                update_key_stopwatch_image(deck, getSWKey(deck), False, msg)
+            if (stopWatch.splited==True):
+                msg = formatStopWatch(stopWatch.lastLap())
+                update_key_stopwatch_image(deck, getTLKey(deck), False, msg)
+            sleep(0.05)
 
-        # Wait until all application threads have terminated (for this example,
-        # this is when all deck handles are closed).
-        for t in threading.enumerate():
-            if t is threading.currentThread():
-                continue
-
-            if t.is_alive():
-                t.join()
