@@ -93,6 +93,9 @@ def on_message(client, userdata, msg):
     if (msg.topic == '/status'):
         states = json.loads(msg.payload)
         print(states)
+        for aGate in states:
+            gateStates[aGate.id]=aGate.state
+
 
 client = mqtt.Client()
 client.on_connect = on_connect
