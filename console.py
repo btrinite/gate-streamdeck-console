@@ -225,6 +225,11 @@ def on_connect(client, userdata, flags, rc):
     # reconnect then subscriptions will be renewed.
     client.subscribe("/status")
 
+def on_disconnect(client, userdata, rc):
+    print("Disconnected with result code "+str(rc))
+    sleep(2)
+    client.reconnect()
+
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -249,6 +254,7 @@ if __name__ == "__main__":
 
         client.on_connect = on_connect
         client.on_message = on_message
+        client.on_disconnect = on_disconnect
 
         client.connect("localhost", 1883, 2)
 
