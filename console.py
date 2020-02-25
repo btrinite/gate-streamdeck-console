@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
         print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
 
-        #client.connect("localhost", 1883, 60)
+        client.connect("localhost", 1883, 60)
 
         # Set initial screen brightness to 30%.
         deck.set_brightness(30)
