@@ -76,7 +76,7 @@ class myTimer(object):
 stopWatch = myTimer()
 run = False
 
-gateStates=[]
+gateStates={}
 
 client = mqtt.Client()
 
