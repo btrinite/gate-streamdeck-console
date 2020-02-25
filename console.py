@@ -92,7 +92,6 @@ def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
     if (msg.topic == '/status'):
         states = json.loads(msg.payload)
-        print(states)
         for aGate in states:
             gateStates[aGate.id]=aGate.state
         print(gateStates)
