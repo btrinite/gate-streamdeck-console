@@ -145,7 +145,7 @@ def get_key_style(deck, key, state):
         label = "00:00.000" if state else "00:00.000"
     else:
         name = "G{}".format(key+1)
-        icon = "{}.png".format("Plugged" if (gateStates["G{}".format(key+1)]!='disconnected') else "Unplugged")
+        icon = "{}.png".format("Plugged" if ("G{}".format(key+1) in gateStates and gateStates["G{}".format(key+1)]!='disconnected') else "Unplugged")
         font = "Roboto-Regular.ttf"
         label = "Pressed!" if state else "Gate {}".format(key+1)
 
