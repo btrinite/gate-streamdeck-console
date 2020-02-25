@@ -95,6 +95,7 @@ def on_message(client, userdata, msg):
         print(states)
         for aGate in states:
             gateStates[aGate.id]=aGate.state
+        print(gateStates)
 
 
 client = mqtt.Client()
