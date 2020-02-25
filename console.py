@@ -13,6 +13,7 @@
 import os
 import time
 from time import sleep
+import json
 
 import threading
 from PIL import Image, ImageDraw, ImageFont
@@ -74,6 +75,25 @@ class myTimer(object):
 
 stopWatch = myTimer()
 run = False
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("/status")
+
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload))
+
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+
 
 # Folder location of image assets used by this example.
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
@@ -140,7 +160,7 @@ def get_key_style(deck, key, state):
         font = "Roboto-Regular.ttf"
         label = "00:00.000" if state else "00:00.000"
     else:
-        name = "gate"
+        name = "G{}".format(key+1)
         icon = "{}.png".format("Plugged" if state else "Unplugged")
         font = "Roboto-Regular.ttf"
         label = "Pressed!" if state else "Gate {}".format(key+1)
@@ -193,6 +213,7 @@ def key_change_callback(deck, key, state):
                 stopWatch.split()
             else:
                 stopWatch.start()
+                client.publish("cmd", json.dumps({'cmd': 'step'}))
                 msg = '------'
                 update_key_stopwatch_image(deck, getTLKey(deck), False, msg)
 
@@ -209,19 +230,6 @@ def key_change_callback(deck, key, state):
             run=False
     return
 
-# The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    client.subscribe("/status")
-
-
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
-
 if __name__ == "__main__":
     streamdecks = DeviceManager().enumerate()
 
@@ -232,10 +240,6 @@ if __name__ == "__main__":
         deck.reset()
 
         print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
-
-        client = mqtt.Client()
-        client.on_connect = on_connect
-        client.on_message = on_message
 
         #client.connect("localhost", 1883, 60)
 
