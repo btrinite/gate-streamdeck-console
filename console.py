@@ -76,6 +76,8 @@ class myTimer(object):
 stopWatch = myTimer()
 run = False
 
+gateStates=[]
+
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -88,7 +90,9 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
-
+    if (msg.topic == '/status'):
+        states = json.loads(msg.payload)
+        print(states)
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -127,7 +131,6 @@ def render_key_image(deck, icon_filename, font_filename, label_text):
     draw.text(label_pos, text=label_text, font=font, fill="white")
 
     return PILHelper.to_native_format(deck, image)
-
 
 # Returns styling information for a key based on its position and state.
 def get_key_style(deck, key, state):
