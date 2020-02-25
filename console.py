@@ -218,8 +218,8 @@ def key_change_callback(deck, key, state):
                 update_key_stopwatch_image(deck, getTLKey(deck), False, msg)
 
         elif key_style["name"] == "stop":
+            client.publish("/cmd", json.dumps({'cmd': 'init'}))
             if stopWatch.started:
-                client.publish("/cmd", json.dumps({'cmd': 'init'}))
                 msg = formatStopWatch(stopWatch.stop())
                 update_key_stopwatch_image(deck, getSWKey(deck), state, msg)
         # When an exit button is pressed, close the application.
