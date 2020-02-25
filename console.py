@@ -227,7 +227,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_disconnect(client, userdata, rc):
     print("Disconnected with result code "+str(rc))
-    sleep(2)
+    sleep(5)
     client.reconnect()
 
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
         client.on_message = on_message
         client.on_disconnect = on_disconnect
 
-        client.connect("localhost", 1883, 2)
+        client.connect("localhost", 1883, 5)
 
         # Set initial screen brightness to 30%.
         deck.set_brightness(30)
@@ -277,5 +277,5 @@ if __name__ == "__main__":
             if (stopWatch.splited==True):
                 msg = formatStopWatch(stopWatch.lastLap())
                 update_key_stopwatch_image(deck, getTLKey(deck), False, msg)
-            sleep(0.05)
+            sleep(0.2)
 
