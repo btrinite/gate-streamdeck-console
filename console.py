@@ -78,29 +78,7 @@ run = False
 
 gateStates=[]
 
-# The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    client.subscribe("/status")
-
-
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
-    if (msg.topic == '/status'):
-        states = json.loads(msg.payload)
-        for aGate in states:
-            gateStates[aGate.id]=aGate.state
-        print(gateStates)
-
-
 client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-
 
 # Folder location of image assets used by this example.
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "Assets")
@@ -167,7 +145,7 @@ def get_key_style(deck, key, state):
         label = "00:00.000" if state else "00:00.000"
     else:
         name = "G{}".format(key+1)
-        icon = "{}.png".format("Plugged" if state else "Unplugged")
+        icon = "{}.png".format("Plugged" if (gateStates["G{}".format(key+1)]!='disconnected') else "Unplugged")
         font = "Roboto-Regular.ttf"
         label = "Pressed!" if state else "Gate {}".format(key+1)
 
@@ -237,16 +215,40 @@ def key_change_callback(deck, key, state):
             run=False
     return
 
+mainDeck = {}
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("/status")
+
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload))
+    if (msg.topic == '/status'):
+        states = json.loads(msg.payload)
+        for idx in range(len(states)):
+            gateStates[states[idx]['id']]=states[idx]['state']
+            update_key_image(mainDeck, idx, False)
+
 if __name__ == "__main__":
     streamdecks = DeviceManager().enumerate()
 
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
 
     for index, deck in enumerate(streamdecks):
+        mainDeck=deck
         deck.open()
         deck.reset()
 
         print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
+
+        client.on_connect = on_connect
+        client.on_message = on_message
 
         client.connect("localhost", 1883, 60)
 
