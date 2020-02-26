@@ -243,7 +243,7 @@ def on_message(client, userdata, msg):
 def checkDevice(deck):
     try:
         deck.get_serial_number()
-    except (RuntimeError, TypeError, NameError):
+    except (RuntimeError, TypeError, NameError, IOError):
         os.exit()
     threading.Timer(2, checkDevice, [deck]).start()
     
