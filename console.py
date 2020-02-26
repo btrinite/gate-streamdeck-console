@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/python3
 #         Python Stream Deck Library
 #      Released under the MIT license
 #
