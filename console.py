@@ -241,7 +241,10 @@ def on_message(client, userdata, msg):
             update_key_image(mainDeck, idx, False)
 
 def checkDevice(deck):
-    deck.get_serial_number()
+    try:
+        deck.get_serial_number()
+    except (RuntimeError, TypeError, NameError):
+        os.exit()
     threading.Timer(2, checkDevice, [deck]).start()
     
 
