@@ -244,7 +244,7 @@ def checkDevice(deck):
     try:
         deck.get_serial_number()
     except (RuntimeError, TypeError, NameError, IOError):
-        exit()
+        os._exit(1)   
     threading.Timer(2, checkDevice, [deck]).start()
     
 
