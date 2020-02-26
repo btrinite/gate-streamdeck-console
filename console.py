@@ -240,6 +240,11 @@ def on_message(client, userdata, msg):
             gateStates[states[idx]['id']]=states[idx]['state']
             update_key_image(mainDeck, idx, False)
 
+def checkDevice(deck):
+    deck.get_serial_number()
+    threading.Timer(2, checkDevice, [deck]).start()
+    
+
 if __name__ == "__main__":
     streamdecks = DeviceManager().enumerate()
 
@@ -269,6 +274,7 @@ if __name__ == "__main__":
         deck.set_key_callback(key_change_callback)
 
         run = True
+        checkDevice(deck)
         while run:
             client.loop()
             if (stopWatch.started==True):
