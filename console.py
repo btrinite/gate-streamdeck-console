@@ -76,6 +76,7 @@ stopWatch = myTimer()
 run = False
 
 gateStates={}
+sequence="---"
 
 client = mqtt.Client()
 
@@ -88,6 +89,15 @@ def getSWKey (deck):
 
 def getTLKey (deck):
     return deck.key_count() - 5
+
+def getSeqKey (deck):
+    return deck.key_count() - 1
+
+def getStopKey (deck):
+    return deck.key_count() - 2
+
+def getStartKey (deck):
+    return deck.key_count() - 3
 
 # Generates a custom tile with run-time generated text and custom image via the
 # PIL module.
@@ -117,27 +127,27 @@ def get_key_style(deck, key, state):
     # Last button in the example application is the exit button.
     exit_key_index = deck.key_count() - 1
 
-    if key == exit_key_index:
-        name = "exit"
-        icon = "{}.png".format("Exit")
+    if key == getSeqKey():
+        name = "sequence"
+        icon = "{}.png".format("File")
         font = "Roboto-Regular.ttf"
-        label = "Bye" if state else "Exit"
-    elif (key == exit_key_index-1):
+        label = sequence
+    elif (key == getStopKey()):
         name = "stop"
         icon = "{}.png".format("Stop")
         font = "Roboto-Regular.ttf"
         label = "Stoped" if state else "Stop"
-    elif (key == exit_key_index-2):
+    elif (key == getStartKey()):
         name = "start"
         icon = "{}.png".format("Start")
         font = "Roboto-Regular.ttf"
         label = "Started" if state else "Start"
-    elif (key == exit_key_index-3):
+    elif (key == getSWKey()):
         name = "stopwatch"
         icon = "{}.png".format("Blank")
         font = "Roboto-Regular.ttf"
         label = "00:00.000" if state else "00:00.000"
-    elif (key == exit_key_index-4):
+    elif (key == getTLKey()):
         name = "laptime"
         icon = "{}.png".format("Blank")
         font = "Roboto-Regular.ttf"
@@ -205,6 +215,8 @@ def key_change_callback(deck, key, state):
             if stopWatch.started:
                 msg = formatStopWatch(stopWatch.stop())
                 update_key_stopwatch_image(deck, getSWKey(deck), state, msg)
+        elif key_style["name"] == "sequence":
+            client.publish("/cmd", json.dumps({'cmd': 'nextSeq'}))
         # When an exit button is pressed, close the application.
         elif key_style["name"] == "exit":
             # Reset deck, clearing all button images.
@@ -238,6 +250,10 @@ def on_message(client, userdata, msg):
         for idx in range(len(states)):
             gateStates[states[idx]['id']]=states[idx]['state']
             update_key_image(mainDeck, idx, False)
+    if (msg.topic == '/sequence'):
+            seq = json.loads(msg.payload)
+            sequence = seq['selectedSeq']
+            update_key_image(mainDeck,getSeqKey(), False)
 
 def checkDevice(deck):
     try:
