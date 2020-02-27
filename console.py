@@ -245,6 +245,7 @@ def on_disconnect(client, userdata, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
+    global sequence
     print(msg.topic+" "+str(msg.payload))
     if (msg.topic == '/status'):
         states = json.loads(msg.payload)
