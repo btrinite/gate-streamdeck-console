@@ -127,27 +127,27 @@ def get_key_style(deck, key, state):
     # Last button in the example application is the exit button.
     exit_key_index = deck.key_count() - 1
 
-    if key == getSeqKey():
+    if (key == getSeqKey(deck)):
         name = "sequence"
         icon = "{}.png".format("File")
         font = "Roboto-Regular.ttf"
         label = sequence
-    elif (key == getStopKey()):
+    elif (key == getStopKey(deck)):
         name = "stop"
         icon = "{}.png".format("Stop")
         font = "Roboto-Regular.ttf"
         label = "Stoped" if state else "Stop"
-    elif (key == getStartKey()):
+    elif (key == getStartKey(deck)):
         name = "start"
         icon = "{}.png".format("Start")
         font = "Roboto-Regular.ttf"
         label = "Started" if state else "Start"
-    elif (key == getSWKey()):
+    elif (key == getSWKey(deck)):
         name = "stopwatch"
         icon = "{}.png".format("Blank")
         font = "Roboto-Regular.ttf"
         label = "00:00.000" if state else "00:00.000"
-    elif (key == getTLKey()):
+    elif (key == getTLKey(deck)):
         name = "laptime"
         icon = "{}.png".format("Blank")
         font = "Roboto-Regular.ttf"
