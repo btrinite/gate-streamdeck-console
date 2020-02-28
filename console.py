@@ -124,6 +124,7 @@ def render_key_image(deck, icon_filename, font_filename, label_text):
 
 # Returns styling information for a key based on its position and state.
 def get_key_style(deck, key, state):
+    global sequence
     # Last button in the example application is the exit button.
     exit_key_index = deck.key_count() - 1
 
@@ -255,7 +256,7 @@ def on_message(client, userdata, msg):
     if (msg.topic == '/sequence'):
             seq = json.loads(msg.payload)
             sequence = seq['selectedSeq']
-            update_key_image(mainDeck,getSeqKey(), False)
+            update_key_image(mainDeck,getSeqKey(mainDeck), False)
 
 def checkDevice(deck):
     try:
