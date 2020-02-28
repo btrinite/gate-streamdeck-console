@@ -133,7 +133,7 @@ def get_key_style(deck, key, state):
         name = "sequence"
         icon = "{}.png".format("File") if connected else "{}.png".format("Unplugged")
         font = "Roboto-Regular.ttf"
-        label = sequence if connected else "Disconnected"
+        label = sequence if connected else "MQTT Disc..."
     elif (key == getStopKey(deck)):
         name = "stop"
         icon = "{}.png".format("Stop")
@@ -193,7 +193,7 @@ def update_key_stopwatch_image(deck, key, state, msg):
 # Prints key state change information, updates rhe key image and performs any
 # associated actions when a key is pressed.
 def key_change_callback(deck, key, state):
-    global run
+    global run, connected
     key_style = get_key_style(deck, key, state)
     # Print new key state
     print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
@@ -218,7 +218,12 @@ def key_change_callback(deck, key, state):
                 msg = formatStopWatch(stopWatch.stop())
                 update_key_stopwatch_image(deck, getSWKey(deck), state, msg)
         elif key_style["name"] == "sequence":
-            client.publish("/cmd", json.dumps({'cmd': 'nextSeq'}))
+            if (connected):
+                client.publish("/cmd", json.dumps({'cmd': 'nextSeq'}))
+
+            else:
+                client.reconnect()
+
         # When an exit button is pressed, close the application.
         elif key_style["name"] == "exit":
             # Reset deck, clearing all button images.
