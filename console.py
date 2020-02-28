@@ -77,6 +77,7 @@ run = False
 
 gateStates={}
 sequence="---"
+connected=False
 
 client = mqtt.Client()
 
@@ -124,15 +125,15 @@ def render_key_image(deck, icon_filename, font_filename, label_text):
 
 # Returns styling information for a key based on its position and state.
 def get_key_style(deck, key, state):
-    global sequence
+    global sequence, connected
     # Last button in the example application is the exit button.
     exit_key_index = deck.key_count() - 1
 
     if (key == getSeqKey(deck)):
         name = "sequence"
-        icon = "{}.png".format("File")
+        icon = "{}.png".format("File") if connected else "{}.png".format("Unplugged")
         font = "Roboto-Regular.ttf"
-        label = sequence
+        label = sequence if connected else "Disconnected"
     elif (key == getStopKey(deck)):
         name = "stop"
         icon = "{}.png".format("Stop")
@@ -231,14 +232,21 @@ mainDeck = {}
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
+    global connected
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
+    connected=True
+    update_key_image(mainDeck,getSeqKey(mainDeck), False)
     client.subscribe("/status")
     client.subscribe("/sequence")
+    
 
 def on_disconnect(client, userdata, rc):
+    global connected
+    connected=False
+    update_key_image(mainDeck,getSeqKey(mainDeck), False)
     print("Disconnected with result code "+str(rc))
     sleep(5)
     client.reconnect()
